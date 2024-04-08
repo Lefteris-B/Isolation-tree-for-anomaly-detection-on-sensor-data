@@ -9,8 +9,11 @@
 module AnomalyDetectionSystem(
     input wire clk,
     input wire reset,
-    input wire sensor_input,
-    output wire anomaly_detected
+    input wire [7:0] data_input,
+    input wire data_valid,
+    input wire load_itree,
+    input wire [255:0] itree_input,
+    output reg anomaly_detected
 );
 
 // Signals for FIFO buffer and control
@@ -29,13 +32,15 @@ InputBufferFIFO input_buffer (
 );
 
 // Instantiate IsolationTreeStateMachine
-IsolationTreeStateMachine isolation_tree (
+  IsolationTreeStateMachine isolation_tree_sm (
     .clk(clk),
     .reset(reset),
-    .data_input(fifo_data_out),
+    .data_input(data_input),
     .data_valid(data_valid),
+    .load_itree(load_itree),
+    .itree_input(itree_input),
     .anomaly_detected(anomaly_detected)
-);
+  );
 
 // Control Logic
 assign fifo_read_enable = !fifo_empty && !fifo_full; // Read when FIFO is not empty and not full
