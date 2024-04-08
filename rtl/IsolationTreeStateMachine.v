@@ -17,6 +17,10 @@ always @(posedge clk or negedge reset) begin
         state <= 0;
         anomaly_detected <= 0;
     end else if (data_valid) begin  // Process data only when valid data is available
+        // Process each bit in the 8-bit data_input
+        for (i = 0; i < 8; i = i + 1) begin
+            if (state < 256) begin
+                // Compare current data bit to the expected bit in the tree
                 if (data_input[i] == itree[state]) begin
                     state <= state + 1;  // Advance to the next state
                 end else begin
