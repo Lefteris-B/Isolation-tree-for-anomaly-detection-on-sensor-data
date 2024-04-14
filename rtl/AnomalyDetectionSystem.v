@@ -40,8 +40,8 @@ IsolationTreeStateMachine isolation_tree_sm (
 assign internal_data_valid = !fifo_empty && data_valid; // Simplified condition
 // Define logic for fifo_read_enable based on your requirements
 // Example:
-always @(posedge clk) begin
-    if (reset) begin
+always @(posedge clk or negedge reset) begin
+    if (!reset) begin
         fifo_read_enable <= 0;
     end else begin
         fifo_read_enable <= !fifo_empty && !anomaly_detected; // Example condition

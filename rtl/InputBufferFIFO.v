@@ -1,7 +1,7 @@
 module InputBufferFIFO(
     input wire clk,
     input wire reset,
-    input wire sensor_input,
+    input wire [7:0] sensor_input,
     input wire read_enable,
     output reg [7:0] fifo_output,
     output reg fifo_empty,
