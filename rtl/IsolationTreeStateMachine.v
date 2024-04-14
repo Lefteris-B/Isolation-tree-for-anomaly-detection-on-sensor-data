@@ -6,45 +6,40 @@ module IsolationTreeStateMachine(
     output reg anomaly_detected
 );
 
-// Hardcoded iTree value for comparison, now as an 8-bit value
-reg [7:0] itree = 8'hAB; // Example 8-bit value, replace 'AB' with your actual value
+reg [7:0] itree = 8'hAB; // Example 8-bit hardcoded value
 
-// State Definitions using reg vectors
-reg [1:0] current_state, next_state;
+// Define states using localparam
+localparam [1:0] 
+    IDLE = 2'b00,
+    CHECK_ANOMALY = 2'b01;
 
-// State encoding
-localparam IDLE = 2'b00,
-           CHECK_ANOMALY = 2'b01;
+reg [1:0] current_state = IDLE;
+reg [1:0] next_state;
 
 // State Machine for Anomaly Detection
 always @(posedge clk or negedge reset) begin
     if (!reset) begin
-        // Reset logic
         anomaly_detected <= 0;
         current_state <= IDLE;
     end else begin
-        current_state <= next_state;
+        current_state <= next_state; // Use non-blocking assignment for sequential logic
     end
 end
 
-// Next state logic
-always @(*) begin
+// Next state logic using always_comb (SystemVerilog) or always @* (Verilog)
+always @* begin // Use @* for sensitivity list in Verilog
     case (current_state)
         IDLE: begin
-            if (data_valid) begin
-                next_state = CHECK_ANOMALY;
-            end else {
+            if (data_valid)
+                next_state = CHECK_ANOMALY; // Ensure blocking assignment in combinational logic
+            else
                 next_state = IDLE;
-            }
         end
         CHECK_ANOMALY: begin
-            // Check if the incoming data_input matches the itree value
-            if (data_input == itree) begin
-                anomaly_detected = 1;
-            end else {
+            if (data_input == itree)
+                anomaly_detected = 1; // Direct blocking assignment within combinational logic
+            else
                 anomaly_detected = 0;
-            }
-            // Return to IDLE state to wait for new data
             next_state = IDLE;
         end
         default: next_state = IDLE;
