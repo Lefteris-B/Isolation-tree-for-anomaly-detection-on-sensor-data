@@ -1,11 +1,3 @@
-`include "InputBuffer.sv"
-`include "IsolationTreeStateMachine.sv"
-//`include "InputBuffer.sv"
-//`include "InputBuffer.sv"
-//`include "InputBuffer.sv"
-//`include "InputBuffer.sv"
-//`include "InputBuffer.sv"
-
 module AnomalyDetectionSystem(
     input wire clk,
     input wire reset,
@@ -18,7 +10,8 @@ module AnomalyDetectionSystem(
 
 // Signals for FIFO buffer and control
 wire [7:0] fifo_data_out;
-wire fifo_read_enable, fifo_empty, fifo_full, data_valid;
+wire fifo_read_enable, fifo_empty, fifo_full;
+wire internal_data_valid; // Internal signal to represent data validity based on FIFO status
 
 // Instantiate InputBufferFIFO
 InputBufferFIFO input_buffer (
@@ -32,18 +25,17 @@ InputBufferFIFO input_buffer (
 );
 
 // Instantiate IsolationTreeStateMachine
-  IsolationTreeStateMachine isolation_tree_sm (
+IsolationTreeStateMachine isolation_tree_sm (
     .clk(clk),
     .reset(reset),
     .data_input(data_input),
-    .data_valid(data_valid),
+    .data_valid(internal_data_valid), // Use internal_data_valid here
     .load_itree(load_itree),
     .itree_input(itree_input),
     .anomaly_detected(anomaly_detected)
-  );
+);
 
-// Control Logic
-assign fifo_read_enable = !fifo_empty && !fifo_full; // Read when FIFO is not empty and not full
-assign data_valid = fifo_read_enable; // Data is valid for state machine when we enable FIFO read
+// Control Logic for internal data validity
+assign internal_data_valid = !fifo_empty && !fifo_full && data_valid; // Read when FIFO is not empty, not full, and external data_valid is asserted
 
 endmodule
