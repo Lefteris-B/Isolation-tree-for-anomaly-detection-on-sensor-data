@@ -203,6 +203,13 @@
                 "date": "4/15/2024, 12:35:34 AM",
                 "delay": 42.418,
                 "doc_id": []
+            },
+            {
+                "role": "user",
+                "content": "are you there?\n",
+                "date": "4/15/2024, 1:10:21 AM",
+                "delay": 0,
+                "doc_id": []
             }
         ]
     },
