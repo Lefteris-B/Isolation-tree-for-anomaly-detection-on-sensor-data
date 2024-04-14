@@ -15,11 +15,7 @@ always @(posedge clk or negedge reset) begin
     if (!reset) begin
         state <= 0;
         anomaly_detected <= 0;
-    end else if (data_valid) begin
-        if (load_itree) begin
-            itree <= itree_input;
-        end
-        
+    end 
         for (i = 0; i < 8; i = i + 1) begin
             if (state < 256) begin
                 if (data_input[i] == itree[state]) begin
@@ -41,6 +37,5 @@ always @(posedge clk or negedge reset) begin
             end
         end
     end
-end
 
 endmodule

@@ -203,13 +203,6 @@
                 "date": "4/15/2024, 12:35:34 AM",
                 "delay": 42.418,
                 "doc_id": []
-            },
-            {
-                "role": "user",
-                "content": "change the state machine \"always @(posedge clk or negedge reset) begin if (!reset) begin state <= 0; anomaly\\_detected <= 0; end else if (data\\_valid) begin if (load\\_itree) begin itree <= itree\\_input; end\n\n        for (i = 0; i < 8; i = i + 1) begin\n            if (state < 256) begin\n                if (data_input[i] == itree[state]) begin\n                    state <= state + 1;\n                end\n                 else begin\n                    state <= 0;\n                    anomaly_detected <= 0;\n                   \n                end\n                \n                if (state == 255) begin\n                    anomaly_detected <= 1;\n                    state <= 0;\n                    end\n                     else begin\n                    anomaly_detected <= 0;\n                end\n            end\n        end\n    end\n    \n\nend \" to remove load\\_itree",
-                "date": "4/15/2024, 12:40:50 AM",
-                "delay": 0,
-                "doc_id": []
             }
         ]
     },

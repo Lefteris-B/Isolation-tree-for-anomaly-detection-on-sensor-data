@@ -3,7 +3,6 @@ module i_tree(
     input wire reset,
     input wire [7:0] data_input, // Assuming this is the correct input for FIFO
     input wire data_valid,
-    input wire load_itree,
     input wire [255:0] itree_input,
     output reg anomaly_detected
 );
