@@ -1,4 +1,4 @@
-module AnomalyDetectionSystem(
+module i_tree(
     input wire clk,
     input wire reset,
     input wire [7:0] data_input, // Assuming this is the correct input for FIFO
