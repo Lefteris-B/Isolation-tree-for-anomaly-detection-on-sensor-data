@@ -1,57 +1,75 @@
 `timescale 1ns / 1ps
 
-module AnomalyDetectionSystem_tb;
+module i_tree_tb;
 
-// Inputs
-reg clk;
-reg reset;
-reg sensor_input;
+    // Inputs to the i_tree
+    reg clk;
+    reg reset;
+    reg [7:0] data_input;
+    reg data_valid;
 
-// Output
-wire anomaly_detected;
+    // Output from the i_tree
+    wire anomaly_detected;
 
-// Instantiate the Top Module
-AnomalyDetectionSystem uut (
-    .clk(clk),
-    .reset(reset),
-    .sensor_input(sensor_input),
-    .anomaly_detected(anomaly_detected)
-);
+    // Instantiate the i_tree module
+    i_tree dut (
+        .clk(clk),
+        .reset(reset),
+        .data_input(data_input),
+        .data_valid(data_valid),
+        .anomaly_detected(anomaly_detected)
+    );
 
-// Clock generation
-always #5 clk = ~clk; // Generate a clock with a period of 10ns
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk;  // Clock with a period of 10ns
+    end
 
-initial begin
-    // Setup VCD dump
-    $dumpfile("dump.vcd");
-    $dumpvars(0, AnomalyDetectionSystem_tb);
+    // Test vectors and initialization
+    initial begin
+        // Initialize Inputs
+        reset = 1;
+        data_input = 0;
+        data_valid = 0;
 
-    // Initialize Inputs
-    clk = 0;
-    reset = 0;
-    sensor_input = 0;
+        // Allow time for global reset
+        #10;
+        reset = 0; #5;
+        reset = 1; #10;
 
-    // Reset the system
-    #10;
-    reset = 1;
-    #10;
+        // Test Case 1: Input valid data matching the itree value
+        // Expect anomaly_detected to be asserted
+        data_valid = 1;
+        data_input = 8'hAB;  // Assuming 'AB' is the hardcoded value for anomaly detection
+        #20; data_valid = 0; #10;
 
-    // Test Case 1: No sensor input, expecting no anomaly
-    $display("Test Case 1: Starting with no sensor input.");
-    repeat (10) #10 sensor_input = 0;
+        // Test Case 2: Input valid data that does not match the itree value
+        // Expect anomaly_detected to not be asserted
+        data_valid = 1;
+        data_input = 8'hFF;
+        #20; data_valid = 0; #10;
 
-    // Test Case 2: Generate sensor inputs that do not lead to anomaly
-    $display("Test Case 2: Sensor inputs that do not lead to anomaly.");
-    repeat (5) begin
-        #10 sensor_input = 1; 
-        #10 sensor_input = 0;
+        // More test cases can be added here
+        // Test Case 3: Rapid sequence of valid and invalid data
+        data_valid = 1; data_input = 8'hAB; #10;
+        data_valid = 1; data_input = 8'h23; #10;
+        data_valid = 1; data_input = 8'hAB; #10;
+        data_valid = 0; #10;
 
-    
-    // Wait and observe
-    #100;
-    
-    // Complete simulation
-    $finish;
-end
+        // Test Case 4: Check response to reset during operation
+        data_valid = 1; data_input = 8'hAB;
+        #5 reset = 0; #5 reset = 1;  // Pulse reset
+        #20;
+
+        // Complete all tests
+        #50 $finish;
+    end
+
+    // VCD file generation for waveform analysis
+    initial begin
+        $dumpfile("dump.vcd");
+        $dumpvars(0, i_tree_tb);
+    end
 
 endmodule
