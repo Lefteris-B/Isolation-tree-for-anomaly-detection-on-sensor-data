@@ -1,0 +1,5 @@
+
+62. Executing CHECK pass (checking for obvious problems).
+Checking module i_tree...
+Warning: Wire i_tree.\anomaly_detected is used but has no driver.
+Found and reported 1 problems.

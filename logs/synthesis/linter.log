@@ -1,0 +1,6 @@
+%Warning-WIDTHEXPAND: /openlane/designs/i_tree/src/InputBuffer.v:29:37: Operator OR expects 8 bits on the RHS, but RHS's VARREF 'sensor_data' generates 1 bits.
+                                                                      : ... In instance i_tree.input_buffer_inst
+   29 |             buffer <= (buffer << 1) | sensor_data;
+      |                                     ^
+                      ... For warning description see https://verilator.org/warn/WIDTHEXPAND?v=5.009
+                      ... Use "/* verilator lint_off WIDTHEXPAND */" and lint_on around source to disable this message.

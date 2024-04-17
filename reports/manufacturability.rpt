@@ -1,0 +1,19 @@
+Design Name: i_tree
+Run Directory: /openlane/designs/i_tree/runs/RUN_2024.04.17_14.14.50
+----------------------------------------
+
+Magic DRC Summary:
+Source: /openlane/designs/i_tree/runs/RUN_2024.04.17_14.14.50/reports/signoff/drc.rpt
+Total Magic DRC violations is 0
+----------------------------------------
+
+LVS Summary:
+Source: /openlane/designs/i_tree/runs/RUN_2024.04.17_14.14.50/logs/signoff/39-i_tree.lef.lvs.log
+Number of nets: 248                        |Number of nets: 248                        
+Design is LVS clean.
+----------------------------------------
+
+Antenna Summary:
+Source: /openlane/designs/i_tree/runs/RUN_2024.04.17_14.14.50/logs/signoff/41-arc.log
+Pin violations: 0
+Net violations: 0
