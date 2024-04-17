@@ -1,83 +1,67 @@
-`timescale 1ns / 1ps
+module tb_TopDesign();
 
-module InputBuffer_tb;
+    // Define parameters
+    parameter CLK_PERIOD = 10; // Clock period in simulation time units
 
-// Parameters
-localparam DATA_WIDTH = 8;
+    // Signals
+    reg clk;
+    reg reset;
+    reg sensor_data;
+    wire anomaly_detected;
 
-// Inputs
-reg clk;
-reg reset;
-reg sensor_data;
-reg data_processed;
+    // Instantiate the top module
+    i_tree uut (
+        .clk(clk),
+        .reset(reset),
+        .sensor_data(sensor_data),
+        .anomaly_detected(anomaly_detected)
+    );
 
-// Outputs
-wire [DATA_WIDTH-1:0] data_output;
-wire data_ready;
+    // Clock generation
+    always #((CLK_PERIOD)/2) clk = ~clk;
 
-// Instantiate the Unit Under Test (UUT)
-InputBuffer #(
-    .DATA_WIDTH(DATA_WIDTH)
-) uut (
-    .clk(clk), 
-    .reset(reset), 
-    .sensor_data(sensor_data), 
-    .data_processed(data_processed),
-    .data_output(data_output), 
-    .data_ready(data_ready)
-);
-
-initial begin
-    // Initialize Inputs
-    clk = 0;
-    reset = 1; // Active-high due to active-low reset in module
-    sensor_data = 0;
-    data_processed = 0;
-  	$dumpfile("dump.vcd");
-  	$dumpvars;
-
-    // Reset the module
-    #10 reset = 0; // Assert reset
-    #10 reset = 1; // Deassert reset
-    
-    // Test Case 1: Send 8 bits and expect data_ready pulse
-    sendBits(8'b11010101);
-    waitForDataReadyAndAcknowledge();
-    
-    // Test Case 2: Check module's response to reset during operation
-    sendBits(8'b00110011); // Start sending bits
-    #20 reset = 0; #10 reset = 1; // Reset in the middle
-    sendBits(8'b10101010); // Send another set after reset
-    waitForDataReadyAndAcknowledge();
-    
-    // Test Case 3: Send bits without acknowledging data_ready
-    sendBits(8'b11110000); // Send bits without acknowledging
-    #100; // Wait to see if data_ready is pulsed correctly without acknowledgment
-    
-    $finish;
-end
-
-// Clock generation
-always #5 clk = ~clk; // 100MHz clock
-
-// Task to send bits to the module
-task sendBits;
-    input [DATA_WIDTH-1:0] bits;
-    integer i;
-    begin
-        for (i = DATA_WIDTH-1; i >= 0; i = i - 1) begin
-            @(posedge clk) sensor_data = bits[i];
-        end
+    // Initial values
+    initial begin
+        clk = 0;
+        reset = 1;
+        sensor_data = 0;
+        #200 reset = 0; // De-assert reset after 20 time units
     end
-endtask
 
-// Task to wait for data_ready and acknowledge
-task waitForDataReadyAndAcknowledge;
-    begin
-        @(posedge data_ready); // Wait for data_ready to be asserted
-        @(posedge clk) data_processed = 1; // Acknowledge data processing
-        @(posedge clk) data_processed = 0; // Reset acknowledgment
+    // Test cases
+    initial begin
+      $dumpfile("dump.vcd"); $dumpvars;
+        // Case 1: Normal operation, no anomaly detected
+        sensor_data = 8'hAA; // Input byte
+        #500;
+        assert (!anomaly_detected) else $display("Test case 1 failed: Anomaly detected when none was expected.");
+
+        // Case 2: Anomaly detected
+        sensor_data = 8'h55; // Input byte
+        #500;
+        assert (anomaly_detected) else $display("Test case 2 failed: No anomaly detected when one was expected.");
+
+        // Case 3: Anomaly detected after reset
+        reset = 1; // Reset asserted
+        #500;
+        reset = 0; // Reset de-asserted
+        sensor_data = 8'h55; // Input byte
+        #500;
+        assert (anomaly_detected) else $display("Test case 3 failed: No anomaly detected after reset.");
+
+        // Case 4: Continuation after reset with no anomaly
+        reset = 1; // Reset asserted
+        #500;
+        reset = 0; // Reset de-asserted
+        sensor_data = 8'hAA; // Input byte
+        #500;
+        assert (!anomaly_detected) else $display("Test case 4 failed: Anomaly detected after reset when none was expected.");
     end
-endtask
+
+    // End simulation
+    initial begin
+        #500;
+        $finish;
+    end
 
 endmodule

@@ -1,81 +1,70 @@
-`timescale 1ns / 1ps
+module tb_IsolationTreeStateMachine();
 
-module i_tree_tb;
+    // Define parameters
+    parameter CLK_PERIOD = 10; // Clock period in simulation time units
 
-// Parameters
-parameter CYCLE = 10; // Clock cycle = 10 ns
+    // Signals
+    reg clk;
+    reg reset;
+    reg [7:0] sensor_data;
+    reg data_valid;
+    wire anomaly_detected;
+    wire data_processed;
 
-// Inputs
-reg clk;
-reg reset;
-reg sensor_data;
+    // Instantiate the IsolationTreeStateMachine module
+    IsolationTreeStateMachine uut (
+        .clk(clk),
+        .reset(reset),
+        .data_input(sensor_data),
+        .data_valid(data_valid),
+        .anomaly_detected(anomaly_detected),
+        .data_processed(data_processed)
+    );
 
-// Outputs
-wire anomaly_detected;
+    // Clock generation
+    always #((CLK_PERIOD)/2) clk = ~clk;
 
-// Instantiate the Unit Under Test (UUT)
-i_tree uut (
-    .clk(clk),
-    .reset(reset),
-    .sensor_data(sensor_data),
-    .anomaly_detected(anomaly_detected)
-);
-
-// Clock generation
-always #(CYCLE/2) clk = ~clk;
-
-// Initial setup and test vectors
-initial begin
-    // Initialize Inputs
-    clk = 0;
-    reset = 0;
-    sensor_data = 0;
-  	$dumpfile("dump.vcd"); $dumpvars;
-
-    // Apply reset
-    #(CYCLE) reset = 1;
-    #(CYCLE) reset = 0;
-    #(CYCLE) reset = 1;
-
-    // Test Case 1: Normal operation - Input correct sequence
-    // Assume HARDCODED_VALUE = 8'hAB;
-    send_byte(8'hAB); // Expected: anomaly_detected = 1
-
-    // Test Case 2: Normal operation - Input incorrect sequence
-    send_byte(8'h55); // Expected: anomaly_detected = 0
-
-    // Test Case 3: Check handling of continuous data
-    send_byte(8'hAB); // Expected: anomaly_detected = 1
-    send_byte(8'hFF); // Expected: anomaly_detected = 0
-
-    // Test Case 4: Reset during operation
-    send_bit(1'b1); // Send partial data
-    #(CYCLE * 2) reset = 0; // Assert reset
-    #(CYCLE * 2) reset = 1; // Deassert reset
-    send_byte(8'hAB); // Expected: anomaly_detected = 1 after reset
-
-    // End of simulation
-    #(CYCLE * 10) $finish;
-end
-
-// Task to send a single bit
-task send_bit;
-    input bit_in;
-    begin
-        sensor_data = bit_in;
-        #(CYCLE);
+    // Initial values
+    initial begin
+        clk = 0;
+        reset = 1;
+        sensor_data = 8'h00;
+        data_valid = 0;
+        #20 reset = 0; // De-assert reset after 20 time units
     end
-endtask
 
-// Task to send an entire byte
-task send_byte;
-  input [7:0] bite;
-    integer i;
-    begin
-        for (i = 7; i >= 0; i = i - 1) begin
-          send_bit(bite[i]);
-        end
+    // Test cases
+    initial begin
+        // Case 1: Normal operation, no anomaly
+        sensor_data = 8'hAA; // Data input
+        data_valid = 1; // Valid data
+      $dumpfile("dump.vcd");
+      $dumpvars;
+        #50;
+        assert (!anomaly_detected) else $display("Test case 1 failed: Anomaly detected incorrectly.");
+
+        // Case 2: Anomaly detected
+        sensor_data = 8'hAA; // Data input
+        data_valid = 1; // Valid data
+        #50;
+        assert (anomaly_detected) else $display("Test case 2 failed: Anomaly not detected.");
+
+        // Case 3: Data processed after anomaly detected
+        sensor_data = 8'h00; // Data input
+        data_valid = 1; // Valid data
+        #50;
+        assert (data_processed) else $display("Test case 3 failed: Data not processed after anomaly detected.");
+
+        // Case 4: Reset behavior
+        reset = 1; // Reset asserted
+        #50;
+        assert (!anomaly_detected && !data_processed) else $display("Test case 4 failed: Reset behavior incorrect.");
     end
-endtask
+
+    // End simulation
+    initial begin
+        #500;
+        $finish;
+    end
 
 endmodule

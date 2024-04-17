@@ -1,76 +1,70 @@
-`timescale 1ns / 1ps
+module tb_IsolationTreeStateMachine();
 
-module IsolationTreeStateMachine_tb;
+    // Define parameters
+    parameter CLK_PERIOD = 10; // Clock period in simulation time units
 
-// Inputs
-reg clk;
-reg reset;
-reg [7:0] data_input;
-reg data_valid;
+    // Signals
+    reg clk;
+    reg reset;
+    reg [7:0] sensor_data;
+    reg data_valid;
+    wire anomaly_detected;
+    wire data_processed;
 
-// Output
-wire anomaly_detected;
+    // Instantiate the IsolationTreeStateMachine module
+    IsolationTreeStateMachine uut (
+        .clk(clk),
+        .reset(reset),
+        .data_input(sensor_data),
+        .data_valid(data_valid),
+        .anomaly_detected(anomaly_detected),
+        .data_processed(data_processed)
+    );
 
-// Instantiate the Unit Under Test (UUT)
-IsolationTreeStateMachine uut (
-    .clk(clk), 
-    .reset(reset), 
-    .data_input(data_input), 
-    .data_valid(data_valid), 
-    .anomaly_detected(anomaly_detected)
-);
+    // Clock generation
+    always #((CLK_PERIOD)/2) clk = ~clk;
 
-initial begin
-    // Initialize Inputs
-    clk = 0;
-    reset = 0;
-    data_input = 0;
-    data_valid = 0;
-  	$dumpfile("dump.vcd");
-  	$dumpvars;
+    // Initial values
+    initial begin
+        clk = 0;
+        reset = 1;
+        sensor_data = 8'h00;
+        data_valid = 0;
+        #20 reset = 0; // De-assert reset after 20 time units
+    end
 
-    // Wait 100 ns for global reset to finish
-    #100;
-    
-    // Add stimulus here
-    reset = 1; // Release reset
-    #20;
-    
-    // Test Case 1: Non-matching data input
-    data_input = 8'h55; // Non-matching value
-    data_valid = 1;
-    #10; // Wait for a clock cycle
-    data_valid = 0;
-    #10;
-    
-    // Test Case 2: Matching data input
-    data_input = 8'hAB; // Matching value
-    data_valid = 1;
-    #10; // Wait for a clock cycle
-    data_valid = 0;
-    #10;
-    
-    // Test Case 3: Another non-matching data input
-    data_input = 8'hFF; // Non-matching value
-    data_valid = 1;
-    #10; // Wait for a clock cycle
-    data_valid = 0;
-    #10;
-    
-    // Test Case 4: Reset during operation
-    data_input = 8'hAB; // Matching value
-    data_valid = 1;
-    #5; // Midway through operation
-    reset = 0; // Assert reset
-    #10;
-    reset = 1; // Release reset
-    data_valid = 0;
-    #10;
-    
-    $finish;
-end
+    // Test cases
+    initial begin
+        // Case 1: Normal operation, no anomaly
+        sensor_data = 8'hAA; // Data input
+        data_valid = 1; // Valid data
+      $dumpfile("dump.vcd");
+      $dumpvars;
+        #50;
+        assert (!anomaly_detected) else $display("Test case 1 failed: Anomaly detected incorrectly.");
 
-// Clock generation
-always #5 clk = ~clk;
+        // Case 2: Anomaly detected
+        sensor_data = 8'hAA; // Data input
+        data_valid = 1; // Valid data
+        #50;
+        assert (anomaly_detected) else $display("Test case 2 failed: Anomaly not detected.");
+
+        // Case 3: Data processed after anomaly detected
+        sensor_data = 8'h00; // Data input
+        data_valid = 1; // Valid data
+        #50;
+        assert (data_processed) else $display("Test case 3 failed: Data not processed after anomaly detected.");
+
+        // Case 4: Reset behavior
+        reset = 1; // Reset asserted
+        #50;
+        assert (!anomaly_detected && !data_processed) else $display("Test case 4 failed: Reset behavior incorrect.");
+    end
+
+    // End simulation
+    initial begin
+        #500;
+        $finish;
+    end
 
 endmodule
